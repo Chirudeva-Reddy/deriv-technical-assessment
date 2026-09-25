@@ -144,9 +144,3 @@ The committed artifacts are from the `gpt-5-mini` run. To reproduce the baseline
 - 9 questions is too few for confident metrics; the figures show behaviour, not statistical performance.
 - The index is rebuilt on every run, which is fine for 5 docs.
 
-## Next steps
-
-- A larger labelled eval set with a held-out split for tuning `MIN_SCORE`, including more partial and adversarial questions that pass the gate.
-- Dense retrieval (a small embedding model) as a third ranker in the fusion, to cover synonyms and paraphrases. Measure it against the current hybrid on a larger labelled set that includes paraphrased questions.
-- An entailment check (NLI model or LLM judge) in the validator, reported next to the deterministic checks.
-- Cache the index to disk when the corpus grows.
