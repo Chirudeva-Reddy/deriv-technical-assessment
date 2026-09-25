@@ -74,8 +74,8 @@ def answer_question(question: str, index: Index) -> tuple[list[RetrievedChunk], 
     log.info("retrieval", extra={"fields": {
         "question": question, "results": [(r.chunk.chunk_id, round(r.score, 3)) for r in retrieved],
     }})
-    if not retrieved or retrieved[0].score < MIN_SCORE:
-        top_score = retrieved[0].score if retrieved else 0.0
+    top_score = max((r.score for r in retrieved), default=0.0)
+    if top_score < MIN_SCORE:
         log.info("gate_refused", extra={"fields": {"top_score": round(top_score, 3), "min_score": MIN_SCORE}})
         return retrieved, refusal("gate", "low_retrieval_confidence"), []
 

@@ -10,7 +10,7 @@ import retrieval
 import run_pipeline
 from generation import Answer, GroundedAnswer, generate, refusal
 from prompts import REFUSAL_MESSAGE
-from retrieval import Chunk, RetrievedChunk, build_index, chunk_document, load_documents, retrieve
+from retrieval import Chunk, RetrievedChunk, build_index, chunk_document, load_documents, retrieve, stem_tokens
 from run_pipeline import answer_question, load_questions
 from validation import validate
 
@@ -40,7 +40,18 @@ def test_retrieve_returns_expected_doc(tmp_path):
     chunks = [c for doc_id, text in load_documents(tmp_path) for c in chunk_document(doc_id, text)]
     results = retrieve(build_index(chunks), "When are tax returns due?")
     assert results[0].chunk.doc_id == "tax"
-    assert results == sorted(results, key=lambda r: -r.score)
+
+
+def test_stem_tokens_drops_stop_words_and_plurals():
+    assert stem_tokens("What are the fees for withdrawals and access?") == ["fee", "withdrawal", "access"]
+
+
+def test_bm25_side_finds_word_form_tfidf_misses():
+    chunks = [Chunk("pricing", "pricing_0", "Pricing > Fees\nA flat 5 USD applies."),
+              Chunk("pets", "pets_0", "Pets > Dogs\nDogs need a daily walk.")]
+    results = retrieve(build_index(chunks), "Is there a fee?")
+    assert [r.chunk.chunk_id for r in results] == ["pricing_0"]
+    assert results[0].score == 0.0  # TF-IDF sees no overlap, so the MIN_SCORE gate still refuses it
 
 
 def test_load_documents_fails_loudly(tmp_path):

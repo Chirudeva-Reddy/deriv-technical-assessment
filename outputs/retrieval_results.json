@@ -36,6 +36,12 @@
         "chunk_id": "rate_limits_2",
         "score": 0.0542,
         "text": "API Rate Limits > What happens when you exceed a limit\nRequests over the limit receive HTTP 429 with a Retry-After header in seconds. Clients that keep sending requests while throttled for more than 60 seconds are blocked for 10 minutes. Repeated blocks within 24 hours may lead to the API key being revoked."
+      },
+      {
+        "doc_id": "withdrawals",
+        "chunk_id": "withdrawals_2",
+        "score": 0.0,
+        "text": "Withdrawals > Fees\nBank transfers cost a flat 5 USD. Card refunds are free. Crypto withdrawals pay the network fee only, shown before confirmation."
       }
     ]
   },
@@ -145,16 +151,16 @@
         "text": "Withdrawals > Limits\nLevel 2 verified accounts can withdraw up to 10,000 USD per day and 50,000 USD per calendar month. The minimum withdrawal is 20 USD for bank transfers and 10 USD equivalent for crypto."
       },
       {
-        "doc_id": "rate_limits",
-        "chunk_id": "rate_limits_2",
-        "score": 0.1394,
-        "text": "API Rate Limits > What happens when you exceed a limit\nRequests over the limit receive HTTP 429 with a Retry-After header in seconds. Clients that keep sending requests while throttled for more than 60 seconds are blocked for 10 minutes. Repeated blocks within 24 hours may lead to the API key being revoked."
-      },
-      {
         "doc_id": "kyc_verification",
         "chunk_id": "kyc_verification_0",
         "score": 0.0951,
         "text": "KYC Verification > Verification levels\nTradeport has two verification levels. Level 1 requires a verified email address and phone number and allows deposits but no withdrawals. Level 2 requires a government-issued photo ID and a proof of address, and unlocks withdrawals."
+      },
+      {
+        "doc_id": "kyc_verification",
+        "chunk_id": "kyc_verification_2",
+        "score": 0.0583,
+        "text": "KYC Verification > Review times\nMost Level 2 submissions are reviewed automatically within 10 minutes. Submissions flagged for manual review take up to 2 business days. If a document is rejected, the customer can resubmit immediately; after 3 rejections the case is escalated to the compliance team."
       }
     ]
   },
@@ -168,16 +174,16 @@
         "text": "Withdrawals > Limits\nLevel 2 verified accounts can withdraw up to 10,000 USD per day and 50,000 USD per calendar month. The minimum withdrawal is 20 USD for bank transfers and 10 USD equivalent for crypto."
       },
       {
-        "doc_id": "rate_limits",
-        "chunk_id": "rate_limits_3",
-        "score": 0.1268,
-        "text": "API Rate Limits > Higher limits\nAccounts with a 30-day trading volume above 1,000,000 USD can request a higher tier through support. The higher tier allows 600 requests per minute on REST and 100 order requests per second. Requests are reviewed within 3 business days."
-      },
-      {
         "doc_id": "kyc_verification",
         "chunk_id": "kyc_verification_0",
         "score": 0.0695,
         "text": "KYC Verification > Verification levels\nTradeport has two verification levels. Level 1 requires a verified email address and phone number and allows deposits but no withdrawals. Level 2 requires a government-issued photo ID and a proof of address, and unlocks withdrawals."
+      },
+      {
+        "doc_id": "rate_limits",
+        "chunk_id": "rate_limits_3",
+        "score": 0.1268,
+        "text": "API Rate Limits > Higher limits\nAccounts with a 30-day trading volume above 1,000,000 USD can request a higher tier through support. The higher tier allows 600 requests per minute on REST and 100 order requests per second. Requests are reviewed within 3 business days."
       }
     ]
   }

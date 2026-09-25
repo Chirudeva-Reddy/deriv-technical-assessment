@@ -1,6 +1,6 @@
 # Grounded support-docs QA
 
-A small retrieval-augmented QA service over the local `docs/` folder. It retrieves passages with TF-IDF, answers with citations, refuses questions the docs don't support, and checks every answer deterministically before returning it.
+A small retrieval-augmented QA service over the local `docs/` folder. It retrieves passages with hybrid TF-IDF + BM25 retrieval, answers with citations, refuses questions the docs don't support, and checks every answer deterministically before returning it.
 
 ## Run it
 
@@ -29,19 +29,39 @@ Each stage is its own module, with explicit inputs and outputs:
 
 | File | Role |
 |------|------|
-| `retrieval.py` | `load_documents` → `chunk_document` → `build_index` → `retrieve(index, question) -> list[RetrievedChunk]` |
+| `retrieval.py` | `load_documents` → `chunk_document` → `build_index` (TF-IDF + BM25) → `retrieve(index, question) -> list[RetrievedChunk]` |
 | `prompts.py` | The only place prompt text lives: `SYSTEM_PROMPT`, `REFUSAL_MESSAGE`, `build_user_prompt()` |
 | `generation.py` | `generate(question, retrieved) -> Answer`. Uses `gpt-5-mini` if a key is set, otherwise extractive |
 | `validation.py` | `validate(answer, retrieved) -> list[str]`, a pure function with no I/O |
 | `run_pipeline.py` | `answer_question()` is the orchestrator (retrieve → gate → generate → validate). `main()` runs the eval |
 | `app.py` | CLI wrapper around `answer_question()` |
-| `tests/test_pipeline.py` | Chunking, retrieval, validator rules, gate, fail-closed, input validation |
+| `tests/test_pipeline.py` | Chunking, retrieval (incl. the BM25 side), validator rules, gate, fail-closed, input validation |
 
 Design choices and the reasons for them are in [DECISIONS.md](DECISIONS.md).
 
 ## How retrieval works
 
-Each markdown `##` section becomes one chunk. A chunk's text starts with `Title > Heading`, so the heading's words count toward the match. Sections over 800 characters are split on paragraph boundaries. Chunk ids are `<file stem>_<n>`. Chunks are embedded with scikit-learn `TfidfVectorizer` (1–2-grams, English stop words, sublinear tf) and ranked by cosine similarity. The top 3 are returned. The index is rebuilt on every run.
+Each markdown `##` section becomes one chunk. A chunk's text starts with `Title > Heading`, so the heading's words count toward the match. Sections over 800 characters are split on paragraph boundaries. Chunk ids are `<file stem>_<n>`. Each chunk is indexed two ways:
+
+- **TF-IDF**: scikit-learn `TfidfVectorizer` (1–2-grams, English stop words, sublinear tf), scored by cosine similarity.
+- **BM25**: word tokens with English stop words removed and a trailing plural `s` stripped ("fees" → "fee"), scored with textbook BM25 (`k1=1.5`, `b=0.75`). It's written by hand on top of `CountVectorizer`, so there's no new dependency.
+
+The two rankings are merged with reciprocal-rank fusion (`1/(60 + rank)` summed over both, ties broken by cosine), and the top 3 are returned. Each returned chunk's `score` is still its TF-IDF cosine, so the gate threshold below keeps its meaning. The index is rebuilt on every run.
+
+### Practical improvement: hybrid retrieval
+
+**Why this one.** The confidence gate was already in place (D8), and the error analysis below showed the next weakness was retrieval. TF-IDF matches exact strings only, so "fee" doesn't match "fees" and the right chunk gets outranked. BM25 over lightly stemmed tokens catches those word forms. It's also the cheapest fix available: no model download, no new dependency, and about 30 lines of code.
+
+**Why rank fusion, not score blending.** BM25 scores are unbounded and TF-IDF cosines sit in [0, 1]. Adding the two would need a weight tuned on this 9-question set. Fusing ranks needs no calibration, and the constant (60) is the standard default, not tuned here. The gate keeps using the TF-IDF cosine for the same reason: `MIN_SCORE` was set on that scale, and a gate on BM25 would need re-tuning. A chunk that only BM25 matches can be retrieved but still scores 0 on the gate.
+
+**Effect.** Nothing moved on the eval set. Hit@3, citation hit and behaviour accuracy are identical, and every question's gate score is unchanged, so q6–q8 are still refused by the gate. On the known misses:
+
+| Question (asked by hand) | TF-IDF top 3 | Hybrid top 3 |
+|---|---|---|
+| What is the fee for a bank transfer withdrawal? | same-method, processing, **fees** | same-method, **fees**, processing |
+| How long do crypto withdrawals take? | fees, processing, *password rules* | fees, processing, limits |
+
+BM25 on its own ranks the Fees chunk first for the fee question (9.1 vs 4.9). With only two rankers, though, the fused ranks tie exactly, and the tie goes to TF-IDF. The gain is modest: better recall inside the top 3, with the top-1 unchanged. That helps the LLM, which reads all 3 chunks, more than the extractive baseline, which reads only the first.
 
 ## Grounding and refusal: three layers
 
@@ -62,21 +82,22 @@ Eval set (`questions.json`): 5 answerable questions and 4 unanswerable ones. The
 | Retrieval hit@3 (answerable) | 5/5 | 5/5 |
 | Citation hit (cites an expected doc) | 5/5 | 5/5 |
 | Answer fully covers the question (manual read) | 4/5 | 5/5 |
-| Tokens (6 generated answers) | 0 | 2,640 in / 1,460 out |
-| Latency per generated answer | <1 ms | 3.8–5.3 s (gpt-5-mini runs vary) |
+| Tokens (6 generated answers) | 0 | 2,681 in / 1,547 out |
+| Latency per generated answer | <1 ms | 3.0–5.2 s (gpt-5-mini runs vary) |
 
 The committed artifacts are from the `gpt-5-mini` run. To reproduce the baseline, run with an empty `OPENAI_API_KEY`.
 
 ### Error analysis
 
 - **The baseline answers the wrong part of multi-part questions.** For q3 (REST limit *and* the status code), the extractive generator only reads the top chunk. It returns the 120 requests/minute limit plus an unrelated WebSocket sentence and misses "HTTP 429", which is in the second-ranked chunk. The behaviour metric still counts this as correct, which is why I also report the manual coverage row. `gpt-5-mini` combines both chunks and cites both.
-- **No stemming.** For "What is the fee for a bank transfer withdrawal?" (asked by hand), TF-IDF ranks the *same-method rule* chunk above the *Fees* chunk, because "fee" ≠ "fees". The baseline then answers "Any profit above that amount is paid by bank transfer", which is wrong. The LLM answers "a flat 5 USD" correctly because the Fees chunk is still in the top 3.
+- **Word forms.** For "What is the fee for a bank transfer withdrawal?" (asked by hand), TF-IDF ranks the *same-method rule* chunk above the *Fees* chunk, because "fee" ≠ "fees". Hybrid retrieval lifts Fees from 3rd to 2nd but ties it for 1st (see above), so the top-1 is unchanged. The baseline then answers "Any profit above that amount is paid by bank transfer", which is wrong. The LLM answers "a flat 5 USD" correctly because the Fees chunk is still in the top 3.
 - **The baseline can't detect partial support (q9).** q9 clears the gate, and the extractive generator returns the Level 2 limits as if they answered the whole question. `gpt-5-mini` refuses it (`reason: model_unsupported`), which is the only behaviour difference between the two runs. q6–q8 score below 0.2 (0.0, 0.165, 0.163) and are stopped by the gate in both runs, so q8 is refused for its low score, not because partial support was detected. By hand, "can agents unlock early, *and what is the phone number*" (0.31) is also refused by the model. With a bad API key, the pipeline fails closed with `generation_error:AuthenticationError`.
-- **Another retrieval miss (by hand).** "How long do crypto withdrawals take?" ranks the Fees chunk first ("take" vs "processing times"), so the baseline answers with the network-fee sentence.
+- **Another retrieval miss (by hand).** "How long do crypto withdrawals take?" ranks the Fees chunk first ("take" vs "processing times"), so the baseline answers with the network-fee sentence. Neither retriever can fix this: it's a paraphrase, not a word form. Hybrid retrieval does replace the off-topic *password rules* chunk in the top 3 with *withdrawal limits*.
 
 ## Limitations
 
-- TF-IDF misses synonyms and word forms ("fee" vs "fees", "2FA" vs "two-factor").
+- Retrieval is still lexical. BM25's plural-only stemmer catches "fee"/"fees" but not "processing"/"processed", and neither retriever handles synonyms or paraphrases ("2FA" vs "two-factor", "take" vs "processing times").
+- With two rankers, reciprocal-rank fusion often ties (rank 1 + rank 3 = rank 3 + rank 1). Ties go to TF-IDF.
 - `MIN_SCORE` was tuned on the same eval questions it is evaluated on, with no held-out set. The gap it sits in (0.165 vs 0.272) is narrow, so a legitimate but tersely worded question could be refused.
 - The extractive baseline can't detect partial support. Whatever overlaps with the question gets returned.
 - The validator proves each cited chunk was retrieved and that the answer's numbers appear in it. It does not prove the claim is *entailed* by the chunk.
@@ -86,6 +107,6 @@ The committed artifacts are from the `gpt-5-mini` run. To reproduce the baseline
 ## Next steps
 
 - A larger labelled eval set with a held-out split for tuning `MIN_SCORE`, including more partial and adversarial questions that pass the gate.
-- Hybrid retrieval: add BM25 with stemming, or a small embedding model, and keep TF-IDF as the baseline to beat.
+- Dense retrieval (a small embedding model) as a third ranker in the fusion, to cover synonyms and paraphrases. Measure it against the current hybrid on a larger labelled set that includes paraphrased questions.
 - An entailment check (NLI model or LLM judge) in the validator, reported next to the deterministic checks.
 - Cache the index to disk when the corpus grows.

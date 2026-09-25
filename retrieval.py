@@ -1,17 +1,21 @@
-"""Load docs, chunk them by markdown section, and retrieve chunks with TF-IDF."""
+"""Load docs, chunk them by markdown section, and retrieve chunks with TF-IDF + BM25 (hybrid)."""
 
 import re
 from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
+from scipy import sparse
+from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS, CountVectorizer, TfidfVectorizer
 
 TOP_K = 3
 MAX_CHUNK_CHARS = 800
 # ponytail: set in the gap between the best unanswerable (0.165) and worst answerable (0.272) top score on
 # the same eval questions, with no held-out set. Re-tune on a larger labelled set before trusting it.
 MIN_SCORE = 0.2
+# Textbook BM25 defaults and reciprocal-rank-fusion constant; not tuned on the eval set.
+BM25_K1, BM25_B = 1.5, 0.75
+RRF_K = 60
 
 HEADING = re.compile(r"^(#{1,6})\s+(.*)$")
 
@@ -26,13 +30,15 @@ class Chunk:
 @dataclass(frozen=True)
 class RetrievedChunk:
     chunk: Chunk
-    score: float
+    score: float  # TF-IDF cosine in [0, 1]; the MIN_SCORE gate reads this, not the fused rank
 
 
 @dataclass(frozen=True)
 class Index:
     vectorizer: TfidfVectorizer
-    matrix: "scipy.sparse.csr_matrix"
+    matrix: sparse.csr_matrix
+    bm25_vectorizer: CountVectorizer
+    bm25_matrix: sparse.csr_matrix  # per-(chunk, term) BM25 weight, so a query score is one sparse product
     chunks: list[Chunk]
 
 
@@ -103,14 +109,51 @@ def chunk_document(doc_id: str, text: str) -> list[Chunk]:
     return chunks
 
 
+def stem_tokens(text: str) -> list[str]:
+    """Lowercase word tokens, English stop words removed, trailing plural 's' stripped ("fees" -> "fee").
+
+    ponytail: plural-only stemmer, misses "processing"/"processed"; swap in a Porter stemmer if word forms keep missing.
+    """
+    tokens = [t for t in re.findall(r"\w+", text.lower()) if t not in ENGLISH_STOP_WORDS]
+    return [t[:-1] if len(t) > 3 and t.endswith("s") and not t.endswith("ss") else t for t in tokens]
+
+
+def _bm25_weights(counts: sparse.csr_matrix) -> sparse.csr_matrix:
+    """Turn a (chunk x term) count matrix into BM25 term weights: idf * tf*(k1+1) / (tf + k1*length_norm)."""
+    counts = counts.tocoo()
+    n_chunks = counts.shape[0]
+    doc_freq = np.bincount(counts.col, minlength=counts.shape[1])
+    idf = np.log(1 + (n_chunks - doc_freq + 0.5) / (doc_freq + 0.5))
+    lengths = np.asarray(counts.sum(axis=1)).ravel()
+    length_norm = 1 - BM25_B + BM25_B * lengths / lengths.mean()
+    tf = counts.data
+    weights = idf[counts.col] * tf * (BM25_K1 + 1) / (tf + BM25_K1 * length_norm[counts.row])
+    return sparse.csr_matrix((weights, (counts.row, counts.col)), shape=counts.shape)
+
+
 def build_index(chunks: list[Chunk]) -> Index:
+    texts = [c.text for c in chunks]
     vectorizer = TfidfVectorizer(ngram_range=(1, 2), stop_words="english", sublinear_tf=True)
-    matrix = vectorizer.fit_transform([c.text for c in chunks])
-    return Index(vectorizer, matrix, chunks)
+    bm25_vectorizer = CountVectorizer(analyzer=stem_tokens)
+    return Index(vectorizer, vectorizer.fit_transform(texts),
+                 bm25_vectorizer, _bm25_weights(bm25_vectorizer.fit_transform(texts)), chunks)
+
+
+def _rrf(scores: np.ndarray) -> np.ndarray:
+    """Reciprocal-rank-fusion contribution 1/(RRF_K + rank) per chunk; chunks with score 0 contribute nothing."""
+    ranks = np.empty(len(scores))
+    ranks[np.argsort(-scores, kind="stable")] = np.arange(1, len(scores) + 1)
+    return np.where(scores > 0, 1 / (RRF_K + ranks), 0.0)
 
 
 def retrieve(index: Index, question: str, k: int = TOP_K) -> list[RetrievedChunk]:
-    """Top-k chunks by cosine similarity (rows are L2-normalised, so a dot product is cosine). Zero scores dropped."""
-    scores = (index.matrix @ index.vectorizer.transform([question]).T).toarray().ravel()
-    top = np.argsort(-scores, kind="stable")[:k]
-    return [RetrievedChunk(index.chunks[i], float(scores[i])) for i in top if scores[i] > 0]
+    """Top-k chunks by reciprocal-rank fusion of TF-IDF cosine and BM25. Chunks neither method matches are dropped.
+
+    Fusing ranks rather than scores means the two scales never need calibrating against each other.
+    """
+    cosine = (index.matrix @ index.vectorizer.transform([question]).T).toarray().ravel()
+    query_terms = index.bm25_vectorizer.transform([question]).sign()
+    bm25 = (index.bm25_matrix @ query_terms.T).toarray().ravel()
+    fused = _rrf(cosine) + _rrf(bm25)
+    top = np.lexsort((-cosine, -fused))[:k]  # ties on fused rank go to the higher cosine
+    return [RetrievedChunk(index.chunks[i], float(cosine[i])) for i in top if fused[i] > 0]

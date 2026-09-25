@@ -5,7 +5,7 @@ Choices made before and during the build, and why.
 | # | Decision | Why |
 |---|----------|-----|
 | D1 | Generator: OpenAI `gpt-5-mini`, with an extractive fallback when `OPENAI_API_KEY` is unset or empty | A real LLM for the graded run. The fallback keeps the pipeline runnable without a key and doubles as the baseline |
-| D2 | Retrieval: TF-IDF (scikit-learn, 1–2-grams, English stop words, sublinear tf, cosine) | Deterministic, no model download, and scores fall in [0, 1], so a threshold means something |
+| D2 | Retrieval baseline: TF-IDF (scikit-learn, 1–2-grams, English stop words, sublinear tf, cosine) | Deterministic, no model download, and scores fall in [0, 1], so a threshold means something |
 | D3 | Interface: argparse CLI, `python app.py --question "..."` | Stdlib only, no server to start |
 | D4 | Pinned `requirements.txt`; one main command, `python run_pipeline.py` | Runs with nothing but pip |
 | D5 | Validator failure → fail closed: the answer is replaced by the refusal and `supported=false` | No unvalidated claim reaches the user |
@@ -24,3 +24,4 @@ Choices made before and during the build, and why.
 | D18 | Committed artifacts come from `gpt-5-mini`; the extractive run is the baseline; both are in the README | Every model has to beat a baseline |
 | D19 | The validator also checks that every number in a supported answer appears in the cited chunks | Numbers are the cheapest fabrication to catch deterministically, and the policy docs are full of them |
 | D20 | The report adds `citation_hit` (cited docs ∩ `expected_docs`) next to retrieval hit@k | Shows the answer cites the right source, not just that retrieval found it |
+| D21 | Practical improvement: hybrid retrieval. TF-IDF + hand-written BM25 (plural-stripping tokens, k1=1.5, b=0.75), merged by reciprocal-rank fusion (k=60, ties go to cosine). `score` and the gate stay on the TF-IDF cosine | The error analysis showed word-form misses ("fee" vs "fees"). No new dependency or download. Rank fusion needs no weight tuned on 9 questions, and `MIN_SCORE` keeps the scale it was set on |

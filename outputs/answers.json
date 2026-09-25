@@ -14,7 +14,7 @@
   },
   {
     "question_id": "q2",
-    "answer": "After 5 failed login attempts within 15 minutes, the account is locked for 30 minutes.",
+    "answer": "After 5 failed login attempts within 15 minutes, the account is locked for 30 minutes. Each further failed attempt during the lock extends it by another 30 minutes.",
     "citations": [
       "authentication"
     ],
@@ -27,7 +27,7 @@
   },
   {
     "question_id": "q3",
-    "answer": "The REST API allows 120 requests per minute per API key, and requests over the limit receive HTTP 429 with a Retry-After header in seconds.",
+    "answer": "The REST API rate limit is 120 requests per minute per API key. Requests over the limit receive HTTP 429 with a Retry-After header in seconds.",
     "citations": [
       "rate_limits"
     ],
@@ -41,7 +41,7 @@
   },
   {
     "question_id": "q4",
-    "answer": "Proof of address must be a utility bill, bank statement or tax letter dated within the last 3 months.",
+    "answer": "Accepted proof of address documents are a utility bill, bank statement or tax letter dated within the last 3 months.",
     "citations": [
       "kyc_verification"
     ],
