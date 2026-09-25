@@ -28,10 +28,14 @@ flowchart TD
     Q(["Question<br/>app.py · run_pipeline.py"]) --> RET
 
     subgraph S1 ["1 · Retrieve — retrieval.py"]
-        DOCS[("docs/*.md")] --> CH["Chunk by ## section"] --> IDX["TF-IDF index"] --> RET["Top 3 chunks by cosine"]
+        DOCS[("docs/*.md")] --> CH["Chunk by ## section"]
+        CH --> TF["TF-IDF<br/>cosine"]
+        CH --> BM["BM25<br/>plural-stripped tokens"]
+        TF --> RET["Top 3 chunks<br/>reciprocal-rank fusion"]
+        BM --> RET
     end
 
-    RET --> GATE{"2 · Gate<br/>top score ≥ MIN_SCORE 0.2?"}
+    RET --> GATE{"2 · Gate<br/>best TF-IDF cosine ≥ MIN_SCORE 0.2?"}
     GATE -- no --> REF
     GATE -- yes --> KEY
 
