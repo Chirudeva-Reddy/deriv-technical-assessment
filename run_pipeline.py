@@ -112,16 +112,19 @@ def main() -> None:
             "supported": answer.supported,
             "behavior_match": answer.supported == answerable,
             "retrieval_hit": bool({r.chunk.doc_id for r in retrieved} & set(expected_docs)) if answerable else None,
+            "citation_hit": bool(set(answer.citations) & set(expected_docs)) if answerable else None,
             "latency_ms": round((time.perf_counter() - start) * 1000),
         })
 
     hits = [r["retrieval_hit"] for r in report if r["retrieval_hit"] is not None]
+    cited = [r["citation_hit"] for r in report if r["citation_hit"] is not None]
     summary = {
         "generator": next((a["generator"] for a in answers if a["generator"] != "gate"), "gate"),
         "questions": len(report),
         "checks_pass_rate": sum(r["checks_passed"] for r in report) / len(report),
         "behavior_accuracy": sum(r["behavior_match"] for r in report) / len(report),
         f"hit@{TOP_K}": f"{sum(hits)}/{len(hits)}",
+        "citation_hit": f"{sum(cited)}/{len(cited)}",
         "min_score": MIN_SCORE,
     }
     for name, data in [

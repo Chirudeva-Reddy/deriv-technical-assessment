@@ -49,12 +49,15 @@ def test_validator_accepts_grounded_answer_and_clean_refusal():
 
 def test_validator_rules():
     assert validate(Answer(" ", ["withdrawals"], ["withdrawals_0"], True, "t"), RETRIEVED) == ["empty_answer"]
-    assert validate(Answer("5 USD", [], [], True, "t"), RETRIEVED) == ["supported_without_citation"]
+    assert "supported_without_citation" in validate(Answer("5 USD", [], [], True, "t"), RETRIEVED)
     assert validate(Answer("5 USD", ["withdrawals"], ["withdrawals_0", "kyc_1"], True, "t"), RETRIEVED) == [
         "cited_chunk_not_retrieved:kyc_1"
     ]
     assert validate(Answer("5 USD", ["kyc"], ["withdrawals_0"], True, "t"), RETRIEVED) == ["citation_doc_not_retrieved:kyc"]
     assert validate(Answer("Probably 5 USD", [], [], False, "t"), RETRIEVED) == ["malformed_refusal"]
+    assert validate(Answer("It costs 7 USD.", ["withdrawals"], ["withdrawals_0"], True, "t"), RETRIEVED) == [
+        "number_not_in_cited_chunks:7"
+    ]
 
 
 def small_index():
@@ -72,7 +75,7 @@ def test_fails_closed_when_generator_cites_unretrieved_chunk(monkeypatch):
     fake = Answer("It costs 5 USD.", ["withdrawals"], ["kyc_verification_1"], True, "fake")
     monkeypatch.setattr(run_pipeline, "generate", lambda *a: fake)
     _, answer, failures = answer_question("How much do bank transfers cost?", small_index())
-    assert failures == ["cited_chunk_not_retrieved:kyc_verification_1"]
+    assert "cited_chunk_not_retrieved:kyc_verification_1" in failures
     assert (answer.supported, answer.reason, answer.answer, answer.citations) == (
         False, "validation_failed", REFUSAL_MESSAGE, []
     )
