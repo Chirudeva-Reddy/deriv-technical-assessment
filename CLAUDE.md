@@ -53,5 +53,5 @@ Technical assessment repo (AI/ML engineering). Reviewers read the code, so clari
 
 ## Tooling
 
-- Architecture diagrams: use `/excalidraw-diagram` and save them under `docs/`.
+- Architecture diagrams: use `/excalidraw-diagram` and save them under `design/` (`docs/` is the QA corpus).
 - Commit small, focused changes with clear messages.
