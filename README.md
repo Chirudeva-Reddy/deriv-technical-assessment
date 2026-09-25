@@ -23,7 +23,43 @@ Python 3.13. There are no services, databases or model downloads.
 
 ## Architecture
 
-![Architecture](design/architecture.png)
+```mermaid
+flowchart TD
+    Q(["Question<br/>app.py · run_pipeline.py"]) --> RET
+
+    subgraph S1 ["1 · Retrieve — retrieval.py"]
+        DOCS[("docs/*.md")] --> CH["Chunk by ## section"] --> IDX["TF-IDF index"] --> RET["Top 3 chunks by cosine"]
+    end
+
+    RET --> GATE{"2 · Gate<br/>top score ≥ MIN_SCORE 0.2?"}
+    GATE -- no --> REF
+    GATE -- yes --> KEY
+
+    subgraph S3 ["3 · Generate — generation.py + prompts.py"]
+        KEY{"OPENAI_API_KEY set?"}
+        KEY -- yes --> LLM["gpt-5-mini<br/>structured output"]
+        KEY -- no --> EXT["Extractive<br/>best 1–2 sentences of top chunk"]
+        LLM --> DRAFT["Answer<br/>supported · answer · cited_chunk_ids"]
+        EXT --> DRAFT
+    end
+
+    DRAFT --> VAL{"4 · Validate — validation.py<br/>citations present and retrieved?<br/>numbers found in cited chunks?"}
+    VAL -- "any check fails" --> REF
+    VAL -- pass --> SUP{"supported?"}
+    SUP -- yes --> ANS(["ANSWERED<br/>answer + citations"])
+    SUP -- no --> REF(["REFUSED<br/>fixed refusal message, no citations, reason"])
+```
+
+Every question ends in exactly one of two states. A refusal always records why:
+
+| `reason` | Set by |
+|----------|--------|
+| `low_retrieval_confidence` | Gate: no chunk scored at least `MIN_SCORE` (the generator is never called) |
+| `model_unsupported` | Generator: the context doesn't fully answer the question |
+| `generation_error:<Error>`, `unparsed_output` | Generator: API error or timeout after 2 retries, or output that doesn't fit the schema |
+| `validation_failed` | Validator: any check failed, so the draft answer is thrown away |
+
+The hand-drawn version is in [design/architecture.png](design/architecture.png).
 
 Each stage is its own module, with explicit inputs and outputs:
 
