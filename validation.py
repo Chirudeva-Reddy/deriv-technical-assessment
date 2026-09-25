@@ -31,4 +31,5 @@ def validate(answer: Answer, retrieved: list[RetrievedChunk]) -> list[str]:
 
 
 def _numbers(text: str) -> set[str]:
-    return set(re.findall(r"\d+(?:[.,]\d+)*", text))
+    """Numbers with thousands separators removed, so "5,000" and "5000" match."""
+    return {n.replace(",", "") for n in re.findall(r"\d+(?:[.,]\d+)*", text)}

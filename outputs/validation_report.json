@@ -1,7 +1,10 @@
 {
   "summary": {
-    "generator": "openai",
-    "questions": 8,
+    "generators": [
+      "gate",
+      "openai"
+    ],
+    "questions": 9,
     "checks_pass_rate": 1.0,
     "behavior_accuracy": 1.0,
     "hit@3": "5/5",
@@ -17,8 +20,7 @@
       "supported": true,
       "behavior_match": true,
       "retrieval_hit": true,
-      "citation_hit": true,
-      "latency_ms": 5819
+      "citation_hit": true
     },
     {
       "question_id": "q2",
@@ -28,8 +30,7 @@
       "supported": true,
       "behavior_match": true,
       "retrieval_hit": true,
-      "citation_hit": true,
-      "latency_ms": 5855
+      "citation_hit": true
     },
     {
       "question_id": "q3",
@@ -39,8 +40,7 @@
       "supported": true,
       "behavior_match": true,
       "retrieval_hit": true,
-      "citation_hit": true,
-      "latency_ms": 6346
+      "citation_hit": true
     },
     {
       "question_id": "q4",
@@ -50,8 +50,7 @@
       "supported": true,
       "behavior_match": true,
       "retrieval_hit": true,
-      "citation_hit": true,
-      "latency_ms": 6870
+      "citation_hit": true
     },
     {
       "question_id": "q5",
@@ -61,8 +60,7 @@
       "supported": true,
       "behavior_match": true,
       "retrieval_hit": true,
-      "citation_hit": true,
-      "latency_ms": 4562
+      "citation_hit": true
     },
     {
       "question_id": "q6",
@@ -72,8 +70,7 @@
       "supported": false,
       "behavior_match": true,
       "retrieval_hit": null,
-      "citation_hit": null,
-      "latency_ms": 1
+      "citation_hit": null
     },
     {
       "question_id": "q7",
@@ -83,8 +80,7 @@
       "supported": false,
       "behavior_match": true,
       "retrieval_hit": null,
-      "citation_hit": null,
-      "latency_ms": 1
+      "citation_hit": null
     },
     {
       "question_id": "q8",
@@ -94,8 +90,17 @@
       "supported": false,
       "behavior_match": true,
       "retrieval_hit": null,
-      "citation_hit": null,
-      "latency_ms": 1
+      "citation_hit": null
+    },
+    {
+      "question_id": "q9",
+      "checks_passed": true,
+      "failures": [],
+      "expected_behavior": "unanswerable",
+      "supported": false,
+      "behavior_match": true,
+      "retrieval_hit": null,
+      "citation_hit": null
     }
   ]
 }

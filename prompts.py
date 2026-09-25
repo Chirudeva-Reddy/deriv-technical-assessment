@@ -4,7 +4,7 @@ from retrieval import RetrievedChunk
 
 REFUSAL_MESSAGE = "I can't answer that from the available support documentation."
 
-SYSTEM_PROMPT = """You are a support assistant for Tradeport. Answer the user's question using ONLY the numbered context passages.
+SYSTEM_PROMPT = """You are a support assistant. Answer the user's question using ONLY the numbered context passages.
 
 Rules:
 - Use only facts stated in the context. Do not use outside knowledge and do not guess.

@@ -10,7 +10,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 TOP_K = 3
 MAX_CHUNK_CHARS = 800
 # ponytail: set in the gap between the best unanswerable (0.165) and worst answerable (0.272) top score on
-# the same 8 eval questions, with no held-out set. Re-tune on a larger labelled set before trusting it.
+# the same eval questions, with no held-out set. Re-tune on a larger labelled set before trusting it.
 MIN_SCORE = 0.2
 
 HEADING = re.compile(r"^(#{1,6})\s+(.*)$")

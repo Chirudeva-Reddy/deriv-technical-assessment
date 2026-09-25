@@ -8,7 +8,7 @@ import json
 
 from dotenv import load_dotenv
 
-from run_pipeline import answer_question, build_pipeline_index, setup_logging
+from run_pipeline import DOCS_DIR, answer_question, build_pipeline_index, setup_logging
 
 
 def main() -> None:
@@ -20,7 +20,7 @@ def main() -> None:
 
     load_dotenv()
     setup_logging()
-    retrieved, answer, _ = answer_question(question, build_pipeline_index())
+    retrieved, answer, _ = answer_question(question, build_pipeline_index(DOCS_DIR))
     print(json.dumps({
         "question": question,
         "answer": answer.answer,

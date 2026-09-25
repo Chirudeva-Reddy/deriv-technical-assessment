@@ -1,4 +1,4 @@
-"""Run every question in questions.json through retrieve -> gate -> generate -> validate and write the artifacts.
+"""Run every question in questions.json through retrieve -> gate -> generate -> validate and write the artifacts to outputs/.
 
 Usage: python run_pipeline.py
 """
@@ -6,7 +6,6 @@ Usage: python run_pipeline.py
 import json
 import logging
 import sys
-import time
 from dataclasses import asdict
 from pathlib import Path
 
@@ -20,6 +19,7 @@ ROOT = Path(__file__).parent
 DOCS_DIR = ROOT / "docs"
 QUESTIONS_PATH = ROOT / "questions.json"
 LOG_PATH = ROOT / "logs" / "pipeline.jsonl"
+OUTPUT_DIR = ROOT / "outputs"
 BEHAVIORS = {"answerable", "unanswerable"}
 
 log = logging.getLogger("pipeline")
@@ -40,7 +40,7 @@ def setup_logging() -> None:
     log.setLevel(logging.INFO)
 
 
-def build_pipeline_index(docs_dir: Path = DOCS_DIR) -> Index:
+def build_pipeline_index(docs_dir: Path) -> Index:
     docs = load_documents(docs_dir)
     log.info("docs_loaded", extra={"fields": {"count": len(docs), "doc_ids": [d for d, _ in docs]}})
     chunks = [c for doc_id, text in docs for c in chunk_document(doc_id, text)]
@@ -90,12 +90,11 @@ def answer_question(question: str, index: Index) -> tuple[list[RetrievedChunk], 
 def main() -> None:
     load_dotenv()
     setup_logging()
-    index = build_pipeline_index()
+    index = build_pipeline_index(DOCS_DIR)
     questions = load_questions(QUESTIONS_PATH)
 
     retrieval_results, answers, report = [], [], []
     for q in questions:
-        start = time.perf_counter()
         retrieved, answer, failures = answer_question(q["question"], index)
         retrieval_results.append({"question_id": q["id"], "retrieved_chunks": [
             {"doc_id": r.chunk.doc_id, "chunk_id": r.chunk.chunk_id, "score": round(r.score, 4), "text": r.chunk.text}
@@ -113,13 +112,12 @@ def main() -> None:
             "behavior_match": answer.supported == answerable,
             "retrieval_hit": bool({r.chunk.doc_id for r in retrieved} & set(expected_docs)) if answerable else None,
             "citation_hit": bool(set(answer.citations) & set(expected_docs)) if answerable else None,
-            "latency_ms": round((time.perf_counter() - start) * 1000),
         })
 
     hits = [r["retrieval_hit"] for r in report if r["retrieval_hit"] is not None]
     cited = [r["citation_hit"] for r in report if r["citation_hit"] is not None]
     summary = {
-        "generator": next((a["generator"] for a in answers if a["generator"] != "gate"), "gate"),
+        "generators": sorted({a["generator"] for a in answers}),
         "questions": len(report),
         "checks_pass_rate": sum(r["checks_passed"] for r in report) / len(report),
         "behavior_accuracy": sum(r["behavior_match"] for r in report) / len(report),
@@ -127,12 +125,13 @@ def main() -> None:
         "citation_hit": f"{sum(cited)}/{len(cited)}",
         "min_score": MIN_SCORE,
     }
+    OUTPUT_DIR.mkdir(exist_ok=True)
     for name, data in [
         ("retrieval_results.json", retrieval_results),
         ("answers.json", answers),
         ("validation_report.json", {"summary": summary, "questions": report}),
     ]:
-        (ROOT / name).write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+        (OUTPUT_DIR / name).write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
     log.info("done", extra={"fields": summary})
 
 

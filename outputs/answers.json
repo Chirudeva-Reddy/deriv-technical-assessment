@@ -27,7 +27,7 @@
   },
   {
     "question_id": "q3",
-    "answer": "The REST API limit is 120 requests per minute per API key, and requests over the limit receive HTTP 429 with a Retry-After header in seconds.",
+    "answer": "The REST API allows 120 requests per minute per API key, and requests over the limit receive HTTP 429 with a Retry-After header in seconds.",
     "citations": [
       "rate_limits"
     ],
@@ -41,7 +41,7 @@
   },
   {
     "question_id": "q4",
-    "answer": "Proof of address must be a utility bill, bank statement or tax letter dated within the last 3 months; screenshots and mobile phone bills are not accepted.",
+    "answer": "Proof of address must be a utility bill, bank statement or tax letter dated within the last 3 months.",
     "citations": [
       "kyc_verification"
     ],
@@ -91,5 +91,14 @@
     "supported": false,
     "generator": "gate",
     "reason": "low_retrieval_confidence"
+  },
+  {
+    "question_id": "q9",
+    "answer": "I can't answer that from the available support documentation.",
+    "citations": [],
+    "cited_chunk_ids": [],
+    "supported": false,
+    "generator": "openai",
+    "reason": "model_unsupported"
   }
 ]
