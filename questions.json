@@ -1,0 +1,10 @@
+[
+  {"id": "q1", "question": "How long do crypto withdrawals take to be broadcast?", "expected_behavior": "answerable", "expected_docs": ["withdrawals"]},
+  {"id": "q2", "question": "What happens after 5 failed login attempts?", "expected_behavior": "answerable", "expected_docs": ["authentication"]},
+  {"id": "q3", "question": "What is the REST API rate limit per API key and what status code is returned when it is exceeded?", "expected_behavior": "answerable", "expected_docs": ["rate_limits"]},
+  {"id": "q4", "question": "Which documents are accepted as proof of address for KYC?", "expected_behavior": "answerable", "expected_docs": ["kyc_verification"]},
+  {"id": "q5", "question": "How quickly must a SEV1 incident be acknowledged?", "expected_behavior": "answerable", "expected_docs": ["incident_escalation"]},
+  {"id": "q6", "question": "What is the capital of Australia?", "expected_behavior": "unanswerable", "expected_docs": []},
+  {"id": "q7", "question": "What leverage is available for forex trading on Tradeport?", "expected_behavior": "unanswerable", "expected_docs": []},
+  {"id": "q8", "question": "What is the daily withdrawal limit for Level 2 accounts, and what is the daily limit for Level 3 accounts?", "expected_behavior": "unanswerable", "expected_docs": ["withdrawals"]}
+]
