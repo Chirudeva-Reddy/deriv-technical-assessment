@@ -1,15 +1,21 @@
 """Turn a question plus retrieved chunks into an Answer. generate() is the only place the generator is chosen."""
 
 import logging
+import os
 import re
 import time
 from dataclasses import dataclass
 
-from pydantic import BaseModel
+import openai
+from pydantic import BaseModel, ValidationError
 from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
 
-from prompts import REFUSAL_MESSAGE
+from prompts import REFUSAL_MESSAGE, SYSTEM_PROMPT, build_user_prompt
 from retrieval import RetrievedChunk
+
+MODEL = "gpt-5-mini"
+TIMEOUT_S = 30
+MAX_RETRIES = 2
 
 log = logging.getLogger("pipeline")
 
@@ -66,11 +72,34 @@ def _extractive(question: str, retrieved: list[RetrievedChunk]) -> GroundedAnswe
     return GroundedAnswer(supported=True, answer=" ".join(sentences[i] for i in best), cited_chunk_ids=[top.chunk_id])
 
 
+def _openai(question: str, retrieved: list[RetrievedChunk]) -> tuple[Answer, dict | None]:
+    """Structured-output call. Any API error, model refusal or unparseable output fails closed to a refusal."""
+    client = openai.OpenAI(timeout=TIMEOUT_S, max_retries=MAX_RETRIES)
+    try:
+        response = client.responses.parse(
+            model=MODEL,
+            instructions=SYSTEM_PROMPT,
+            input=build_user_prompt(question, retrieved),
+            text_format=GroundedAnswer,
+        )
+    except (openai.OpenAIError, ValidationError) as error:
+        return refusal("openai", f"generation_error:{type(error).__name__}"), None
+    usage = {"input": response.usage.input_tokens, "output": response.usage.output_tokens} if response.usage else None
+    if response.output_parsed is None:
+        return refusal("openai", "unparsed_output"), usage
+    return _from_grounded(response.output_parsed, retrieved, "openai"), usage
+
+
 def generate(question: str, retrieved: list[RetrievedChunk]) -> Answer:
+    """Uses OpenAI when OPENAI_API_KEY is set, otherwise the extractive baseline."""
     start = time.perf_counter()
-    answer = _from_grounded(_extractive(question, retrieved), retrieved, "extractive")
+    tokens = None
+    if os.getenv("OPENAI_API_KEY", "").strip():
+        answer, tokens = _openai(question, retrieved)
+    else:
+        answer = _from_grounded(_extractive(question, retrieved), retrieved, "extractive")
     log.info("generation", extra={"fields": {
         "generator": answer.generator, "supported": answer.supported, "reason": answer.reason,
-        "latency_ms": round((time.perf_counter() - start) * 1000),
+        "tokens": tokens, "latency_ms": round((time.perf_counter() - start) * 1000),
     }})
     return answer

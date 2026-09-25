@@ -1,0 +1,95 @@
+[
+  {
+    "question_id": "q1",
+    "answer": "Crypto withdrawals are broadcast within 30 minutes once approved.",
+    "citations": [
+      "withdrawals"
+    ],
+    "cited_chunk_ids": [
+      "withdrawals_0"
+    ],
+    "supported": true,
+    "generator": "openai",
+    "reason": null
+  },
+  {
+    "question_id": "q2",
+    "answer": "After 5 failed login attempts within 15 minutes, the account is locked for 30 minutes.",
+    "citations": [
+      "authentication"
+    ],
+    "cited_chunk_ids": [
+      "authentication_2"
+    ],
+    "supported": true,
+    "generator": "openai",
+    "reason": null
+  },
+  {
+    "question_id": "q3",
+    "answer": "The REST API limit is 120 requests per minute per API key, and requests over the limit receive HTTP 429 with a Retry-After header in seconds.",
+    "citations": [
+      "rate_limits"
+    ],
+    "cited_chunk_ids": [
+      "rate_limits_0",
+      "rate_limits_2"
+    ],
+    "supported": true,
+    "generator": "openai",
+    "reason": null
+  },
+  {
+    "question_id": "q4",
+    "answer": "Proof of address must be a utility bill, bank statement or tax letter dated within the last 3 months; screenshots and mobile phone bills are not accepted.",
+    "citations": [
+      "kyc_verification"
+    ],
+    "cited_chunk_ids": [
+      "kyc_verification_1"
+    ],
+    "supported": true,
+    "generator": "openai",
+    "reason": null
+  },
+  {
+    "question_id": "q5",
+    "answer": "SEV1 incidents must be acknowledged within 5 minutes.",
+    "citations": [
+      "incident_escalation"
+    ],
+    "cited_chunk_ids": [
+      "incident_escalation_1"
+    ],
+    "supported": true,
+    "generator": "openai",
+    "reason": null
+  },
+  {
+    "question_id": "q6",
+    "answer": "I can't answer that from the available support documentation.",
+    "citations": [],
+    "cited_chunk_ids": [],
+    "supported": false,
+    "generator": "gate",
+    "reason": "low_retrieval_confidence"
+  },
+  {
+    "question_id": "q7",
+    "answer": "I can't answer that from the available support documentation.",
+    "citations": [],
+    "cited_chunk_ids": [],
+    "supported": false,
+    "generator": "gate",
+    "reason": "low_retrieval_confidence"
+  },
+  {
+    "question_id": "q8",
+    "answer": "I can't answer that from the available support documentation.",
+    "citations": [],
+    "cited_chunk_ids": [],
+    "supported": false,
+    "generator": "gate",
+    "reason": "low_retrieval_confidence"
+  }
+]

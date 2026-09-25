@@ -1,0 +1,161 @@
+[
+  {
+    "question_id": "q1",
+    "retrieved_chunks": [
+      {
+        "doc_id": "withdrawals",
+        "chunk_id": "withdrawals_0",
+        "score": 0.2718,
+        "text": "Withdrawals > Methods and processing times\nTradeport supports withdrawals by bank transfer, card refund and cryptocurrency. Bank transfers are processed within 1 to 3 business days. Card refunds take up to 5 business days to appear on the statement. Crypto withdrawals are broadcast within 30 minutes once approved."
+      },
+      {
+        "doc_id": "withdrawals",
+        "chunk_id": "withdrawals_2",
+        "score": 0.1676,
+        "text": "Withdrawals > Fees\nBank transfers cost a flat 5 USD. Card refunds are free. Crypto withdrawals pay the network fee only, shown before confirmation."
+      },
+      {
+        "doc_id": "authentication",
+        "chunk_id": "authentication_1",
+        "score": 0.0725,
+        "text": "Account Authentication > Password rules\nPasswords must be at least 12 characters long and cannot match any of the last 5 passwords used on the account. Passwords never expire, but Tradeport forces a reset if a password appears in a known breach list."
+      }
+    ]
+  },
+  {
+    "question_id": "q2",
+    "retrieved_chunks": [
+      {
+        "doc_id": "authentication",
+        "chunk_id": "authentication_2",
+        "score": 0.3237,
+        "text": "Account Authentication > Lockout policy\nAfter 5 failed login attempts within 15 minutes, the account is locked for 30 minutes. Each further failed attempt during the lock extends it by another 30 minutes. Support agents cannot manually unlock an account early; the customer must wait or reset their password by email."
+      },
+      {
+        "doc_id": "rate_limits",
+        "chunk_id": "rate_limits_2",
+        "score": 0.0542,
+        "text": "API Rate Limits > What happens when you exceed a limit\nRequests over the limit receive HTTP 429 with a Retry-After header in seconds. Clients that keep sending requests while throttled for more than 60 seconds are blocked for 10 minutes. Repeated blocks within 24 hours may lead to the API key being revoked."
+      }
+    ]
+  },
+  {
+    "question_id": "q3",
+    "retrieved_chunks": [
+      {
+        "doc_id": "rate_limits",
+        "chunk_id": "rate_limits_0",
+        "score": 0.3534,
+        "text": "API Rate Limits > Default limits\nThe Tradeport REST API allows 120 requests per minute per API key. The WebSocket API allows 50 messages per second per connection and at most 5 concurrent connections per account."
+      },
+      {
+        "doc_id": "rate_limits",
+        "chunk_id": "rate_limits_2",
+        "score": 0.2701,
+        "text": "API Rate Limits > What happens when you exceed a limit\nRequests over the limit receive HTTP 429 with a Retry-After header in seconds. Clients that keep sending requests while throttled for more than 60 seconds are blocked for 10 minutes. Repeated blocks within 24 hours may lead to the API key being revoked."
+      },
+      {
+        "doc_id": "rate_limits",
+        "chunk_id": "rate_limits_3",
+        "score": 0.1263,
+        "text": "API Rate Limits > Higher limits\nAccounts with a 30-day trading volume above 1,000,000 USD can request a higher tier through support. The higher tier allows 600 requests per minute on REST and 100 order requests per second. Requests are reviewed within 3 business days."
+      }
+    ]
+  },
+  {
+    "question_id": "q4",
+    "retrieved_chunks": [
+      {
+        "doc_id": "kyc_verification",
+        "chunk_id": "kyc_verification_1",
+        "score": 0.4012,
+        "text": "KYC Verification > Accepted documents\nAccepted photo IDs are passports, national ID cards and driving licences. Proof of address must be a utility bill, bank statement or tax letter dated within the last 3 months. Screenshots and mobile phone bills are not accepted."
+      },
+      {
+        "doc_id": "kyc_verification",
+        "chunk_id": "kyc_verification_0",
+        "score": 0.1884,
+        "text": "KYC Verification > Verification levels\nTradeport has two verification levels. Level 1 requires a verified email address and phone number and allows deposits but no withdrawals. Level 2 requires a government-issued photo ID and a proof of address, and unlocks withdrawals."
+      },
+      {
+        "doc_id": "withdrawals",
+        "chunk_id": "withdrawals_3",
+        "score": 0.0454,
+        "text": "Withdrawals > Security holds\nWithdrawals are blocked for 24 hours after a password change or after 2FA is reset. A new withdrawal address must be confirmed by email and cannot be used for 48 hours after it is added."
+      }
+    ]
+  },
+  {
+    "question_id": "q5",
+    "retrieved_chunks": [
+      {
+        "doc_id": "incident_escalation",
+        "chunk_id": "incident_escalation_1",
+        "score": 0.312,
+        "text": "Incident Escalation > Response targets\nSEV1 incidents must be acknowledged within 5 minutes and the on-call engineering lead paged immediately. SEV2 incidents must be acknowledged within 30 minutes. SEV3 tickets are answered within 1 business day."
+      },
+      {
+        "doc_id": "incident_escalation",
+        "chunk_id": "incident_escalation_3",
+        "score": 0.2067,
+        "text": "Incident Escalation > Customer communication\nFor SEV1 incidents, the status page must be updated within 15 minutes of acknowledgement and then every 30 minutes until resolution. A written post-incident review is published within 5 business days of any SEV1."
+      },
+      {
+        "doc_id": "incident_escalation",
+        "chunk_id": "incident_escalation_2",
+        "score": 0.1546,
+        "text": "Incident Escalation > Who to contact\nSupport agents escalate SEV1 and SEV2 incidents in the #incident-response channel and by paging the on-call engineer through the paging tool. Suspected account takeovers go directly to the security team regardless of severity."
+      }
+    ]
+  },
+  {
+    "question_id": "q6",
+    "retrieved_chunks": []
+  },
+  {
+    "question_id": "q7",
+    "retrieved_chunks": [
+      {
+        "doc_id": "authentication",
+        "chunk_id": "authentication_4",
+        "score": 0.1649,
+        "text": "Account Authentication > API keys\nAPI keys are created from the dashboard under Settings > API. Each account can hold at most 10 active API keys. Keys can be restricted to read-only or trading scope; withdrawal scope is never available through API keys."
+      },
+      {
+        "doc_id": "incident_escalation",
+        "chunk_id": "incident_escalation_0",
+        "score": 0.0611,
+        "text": "Incident Escalation > Severity levels\nSupport classifies incidents into three severity levels. SEV1 means trading or withdrawals are unavailable for all customers. SEV2 means a feature is degraded or unavailable for a subset of customers. SEV3 covers a single customer issue with a workaround."
+      },
+      {
+        "doc_id": "rate_limits",
+        "chunk_id": "rate_limits_3",
+        "score": 0.0594,
+        "text": "API Rate Limits > Higher limits\nAccounts with a 30-day trading volume above 1,000,000 USD can request a higher tier through support. The higher tier allows 600 requests per minute on REST and 100 order requests per second. Requests are reviewed within 3 business days."
+      }
+    ]
+  },
+  {
+    "question_id": "q8",
+    "retrieved_chunks": [
+      {
+        "doc_id": "withdrawals",
+        "chunk_id": "withdrawals_1",
+        "score": 0.1629,
+        "text": "Withdrawals > Limits\nLevel 2 verified accounts can withdraw up to 10,000 USD per day and 50,000 USD per calendar month. The minimum withdrawal is 20 USD for bank transfers and 10 USD equivalent for crypto."
+      },
+      {
+        "doc_id": "rate_limits",
+        "chunk_id": "rate_limits_2",
+        "score": 0.1394,
+        "text": "API Rate Limits > What happens when you exceed a limit\nRequests over the limit receive HTTP 429 with a Retry-After header in seconds. Clients that keep sending requests while throttled for more than 60 seconds are blocked for 10 minutes. Repeated blocks within 24 hours may lead to the API key being revoked."
+      },
+      {
+        "doc_id": "kyc_verification",
+        "chunk_id": "kyc_verification_0",
+        "score": 0.0951,
+        "text": "KYC Verification > Verification levels\nTradeport has two verification levels. Level 1 requires a verified email address and phone number and allows deposits but no withdrawals. Level 2 requires a government-issued photo ID and a proof of address, and unlocks withdrawals."
+      }
+    ]
+  }
+]
